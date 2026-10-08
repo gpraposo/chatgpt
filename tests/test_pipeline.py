@@ -5,6 +5,7 @@ import json
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from decimal import Decimal
 from pathlib import Path
 
@@ -107,7 +108,7 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(first["issue_counts"], {
                 "duplicate_exact": 1, "missing_value": 1, "negative_value": 1,
             })
-            with sqlite3.connect(root / first["database_file"]) as connection:
+            with closing(sqlite3.connect(root / first["database_file"])) as connection:
                 budget, actual, availability = connection.execute("""
                     SELECT SUM(f.budget_cents) / 100.0, SUM(f.actual_cents) / 100.0,
                         100.0 * SUM(f.period_hours - f.planned_downtime_hours - f.unplanned_downtime_hours)

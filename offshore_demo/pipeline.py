@@ -21,6 +21,7 @@ import random
 import re
 import sqlite3
 from collections import Counter, defaultdict
+from contextlib import closing
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
@@ -324,7 +325,8 @@ def _write_database(path: Path, operations: list[Operation]) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     if temporary.exists():
         temporary.unlink()
-    with sqlite3.connect(temporary) as connection:
+    # A transação faz commit/rollback; closing fecha o ficheiro antes de o mover.
+    with closing(sqlite3.connect(temporary)) as connection, connection:
         connection.execute("PRAGMA foreign_keys = ON")
         connection.executescript("""
             CREATE TABLE dim_asset (
